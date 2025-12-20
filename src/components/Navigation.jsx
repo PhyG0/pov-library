@@ -20,9 +20,9 @@ export function Navigation() {
                     <div className="flex justify-between items-center h-16">
                         {/* Logo and brand */}
                         <div className="flex items-center">
-                            <h1 className="text-2xl font-bold gradient-text">
+                            <Link to="/" className="text-2xl font-bold gradient-text hover:opacity-80 transition-opacity">
                                 Eclipse POV
-                            </h1>
+                            </Link>
                         </div>
 
                         {/* Navigation links */}

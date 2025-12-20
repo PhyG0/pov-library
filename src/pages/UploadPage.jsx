@@ -7,7 +7,7 @@ import { getMatchesBySlot, createMatch } from '../services/matchService';
 import { createPOV } from '../services/povService';
 import { getAllPlayers } from '../services/povService';
 import { YouTubeThumbnailPreview } from '../components/YouTubeThumbnailPreview';
-import { getTodayInputFormat } from '../utils/dateUtils';
+import { getTodayInputFormat, formatDate } from '../utils/dateUtils';
 import { isValidYouTubeUrl, extractYouTubeId } from '../utils/youtubeUtils';
 import { getMapName } from '../utils/mapUtils';
 
@@ -332,9 +332,14 @@ export function UploadPage() {
                                                 onClick={() => handleSelectSlot(slot)}
                                                 className="text-left p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all group"
                                             >
-                                                <h3 className="font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400">
-                                                    {slot.name}
-                                                </h3>
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400">
+                                                        {slot.name}
+                                                    </h3>
+                                                    <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">
+                                                        {formatDate(slot.date)}
+                                                    </span>
+                                                </div>
                                                 <p className="text-sm text-gray-600 dark:text-gray-400">
                                                     {slot.matchCount || 0} matches · {slot.povCount || 0} POVs
                                                 </p>
@@ -525,6 +530,7 @@ export function UploadPage() {
                             <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg mb-4 space-y-1 border border-gray-300 dark:border-gray-600">
                                 <p className="text-sm text-gray-700 dark:text-gray-300">
                                     Slot: <span className="font-semibold text-gray-900 dark:text-white">{selectedSlot?.name}</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({formatDate(selectedSlot?.date)})</span>
                                 </p>
                                 <p className="text-sm text-gray-700 dark:text-gray-300">
                                     Match: <span className="font-semibold text-gray-900 dark:text-white">{getMapName(selectedMatch?.matchNumber)}</span>
