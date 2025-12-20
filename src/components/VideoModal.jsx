@@ -3,7 +3,7 @@ import { X, Send, User } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { addComment, getComments } from '../services/povService';
 
-export function VideoModal({ isOpen, onClose, videoId, title, povId }) {
+export function VideoModal({ isOpen, onClose, videoId, title, povId, slotId, matchId }) {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [loadingComments, setLoadingComments] = useState(false);
@@ -19,17 +19,17 @@ export function VideoModal({ isOpen, onClose, videoId, title, povId }) {
 
     // Fetch comments when modal opens
     useEffect(() => {
-        if (isOpen && povId) {
+        if (isOpen && povId && slotId && matchId) {
             fetchComments();
         } else {
             setComments([]);
         }
-    }, [isOpen, povId]);
+    }, [isOpen, povId, slotId, matchId]);
 
     const fetchComments = async () => {
         setLoadingComments(true);
         try {
-            const fetchedComments = await getComments(povId);
+            const fetchedComments = await getComments(slotId, matchId, povId);
             setComments(fetchedComments);
         } catch (error) {
             console.error('Error fetching comments:', error);
@@ -45,7 +45,7 @@ export function VideoModal({ isOpen, onClose, videoId, title, povId }) {
 
         setSubmitting(true);
         try {
-            await addComment(povId, newComment.trim());
+            await addComment(slotId, matchId, povId, newComment.trim());
             setNewComment('');
             fetchComments(); // Refresh list
             toast.success('Comment posted!');
@@ -151,7 +151,7 @@ export function VideoModal({ isOpen, onClose, videoId, title, povId }) {
                                         value={newComment}
                                         onChange={(e) => setNewComment(e.target.value)}
                                         placeholder="Add a comment..."
-                                        className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+                                        className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-xs sm:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                                         disabled={submitting}
                                     />
                                     <button

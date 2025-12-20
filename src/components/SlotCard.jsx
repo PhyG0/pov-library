@@ -1,23 +1,17 @@
 import React, { useState } from 'react';
-import { Play, Copy, Trash2, Check, X } from 'lucide-react';
-import { getYouTubeThumbnail, getYouTubeWatchUrl } from '../utils/youtubeUtils';
+import { Calendar, Trash2, ChevronRight, Trophy, X } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
+import { useNavigate } from 'react-router-dom';
 
-export function POVCard({ pov, onDelete, onPlay }) {
-    const [copied, setCopied] = useState(false);
+export function SlotCard({ slot, onDelete }) {
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [deletePassword, setDeletePassword] = useState('');
     const [deleteError, setDeleteError] = useState('');
+    const navigate = useNavigate();
 
-    const handleCopyLink = async (e) => {
-        e.stopPropagation();
-        const url = getYouTubeWatchUrl(pov.videoId);
-        try {
-            await navigator.clipboard.writeText(url);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        } catch (error) {
-            console.error('Failed to copy:', error);
+    const handleCardClick = () => {
+        if (!showDeleteDialog) {
+            navigate(`/slots/${slot.id}`);
         }
     };
 
@@ -28,11 +22,13 @@ export function POVCard({ pov, onDelete, onPlay }) {
         setDeleteError('');
     };
 
-    const handleConfirmDelete = (e) => {
+    const handleConfirmDelete = async (e) => {
         e.stopPropagation();
         const requiredPassword = import.meta.env.VITE_DELETE_PASSWORD || 'yes-delete';
         if (deletePassword === requiredPassword) {
-            onDelete(pov);
+            if (onDelete) {
+                await onDelete(slot);
+            }
             setShowDeleteDialog(false);
         } else {
             setDeleteError('Incorrect password.');
@@ -46,83 +42,71 @@ export function POVCard({ pov, onDelete, onPlay }) {
         setDeleteError('');
     };
 
-    const handleCardClick = () => {
-        if (onPlay && !showDeleteDialog) {
-            onPlay(pov);
-        }
-    };
-
     return (
         <>
-            <div className="group bg-white dark:bg-dark-800 rounded-xl overflow-hidden shadow-md card-hover cursor-pointer transition-all">
-                {/* Thumbnail with overlay */}
-                <div className="relative aspect-video overflow-hidden bg-gray-200 dark:bg-gray-700">
-                    <img
-                        src={getYouTubeThumbnail(pov.videoId, 'hqdefault')}
-                        alt={pov.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                        onClick={handleCardClick}
-                    />
+            <div
+                onClick={handleCardClick}
+                className="group relative bg-white dark:bg-dark-800 rounded-lg shadow-sm hover:shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200 cursor-pointer hover:border-primary-400 dark:hover:border-primary-500"
+            >
+                {/* Gradient accent bar */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 to-indigo-500"></div>
 
-                    {/* Play overlay */}
-                    <div
-                        onClick={handleCardClick}
-                        className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center"
-                    >
-                        <div className="w-16 h-16 rounded-full bg-red-600 opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition-all duration-300 flex items-center justify-center shadow-2xl">
-                            <Play className="w-8 h-8 text-white ml-1" fill="white" />
+                <div className="p-4 sm:p-5">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-3 gap-2">
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-primary-500 flex-shrink-0" />
+                                <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">
+                                    {slot.name}
+                                </h3>
+                            </div>
+                            {slot.description && (
+                                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
+                                    {slot.description}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Delete button */}
+                        {!showDeleteDialog && (
+                            <button
+                                onClick={handleDelete}
+                                className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-1.5 sm:p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400 flex-shrink-0"
+                                title="Delete slot"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Stats */}
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3">
+                        <div className="px-2 sm:px-3 py-1 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-xs sm:text-sm font-medium">
+                            {slot.matchCount || 0} {slot.matchCount === 1 ? 'Match' : 'Matches'}
+                        </div>
+                        <div className="px-2 sm:px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full text-xs sm:text-sm font-medium">
+                            {slot.povCount || 0} {slot.povCount === 1 ? 'POV' : 'POVs'}
                         </div>
                     </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-4">
-                    {/* Title */}
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 line-clamp-2 text-lg">
-                        {pov.title}
-                    </h3>
-
-                    {/* Player name */}
-                    <p className="text-primary-600 dark:text-primary-400 font-medium mb-1">
-                        {pov.playerName}
-                    </p>
 
                     {/* Date */}
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                        {formatDate(pov.date)}
-                    </p>
+                    {slot.date && (
+                        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                            <span className="truncate">{formatDate(slot.date)}</span>
+                        </div>
+                    )}
 
-                    {/* Actions */}
-                    <div className="flex gap-2">
-                        <button
-                            onClick={handleCopyLink}
-                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors text-sm font-medium"
-                        >
-                            {copied ? (
-                                <>
-                                    <Check className="w-4 h-4" />
-                                    Copied!
-                                </>
-                            ) : (
-                                <>
-                                    <Copy className="w-4 h-4" />
-                                    Copy Link
-                                </>
-                            )}
-                        </button>
-
-                        <button
-                            onClick={handleDelete}
-                            className="px-3 py-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-colors"
-                            aria-label="Delete POV"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </button>
+                    {/* View more indicator */}
+                    <div className="mt-3 flex items-center justify-end text-primary-600 dark:text-primary-400 text-xs sm:text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span>View Details</span>
+                        <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1" />
                     </div>
                 </div>
             </div>
 
-            {/* Delete Confirmation Dialog */}
+            {/* Delete Password Dialog */}
             {showDeleteDialog && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
@@ -135,10 +119,10 @@ export function POVCard({ pov, onDelete, onPlay }) {
                         <div className="flex items-start justify-between mb-4">
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    Confirm Delete
+                                    Delete Slot
                                 </h3>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    This action cannot be undone.
+                                    This will delete all matches and POVs in this slot.
                                 </p>
                             </div>
                             <button

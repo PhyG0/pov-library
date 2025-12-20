@@ -11,15 +11,22 @@ import {
 } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
 
-const COLLECTION_NAME = 'povs';
-const LOCAL_STORAGE_KEY = 'eclipse_povs';
-const COMMENTS_STORAGE_KEY = 'eclipse_comments';
+const SLOTS_COLLECTION = 'slots';
+const MATCHES_SUBCOLLECTION = 'matches';
+const POVS_SUBCOLLECTION = 'povs';
+const COMMENTS_SUBCOLLECTION = 'comments';
+
+// Legacy collection name
+const LEGACY_COLLECTION_NAME = 'povs';
+
+const LOCAL_STORAGE_KEY = 'eclipse_povs_hierarchical';
+const COMMENTS_STORAGE_KEY = 'eclipse_comments_hierarchical';
 
 // Helper to check if Firebase is available
 const isFirebaseAvailable = () => !!db;
 
 // Helper to wrap promise with timeout
-const withTimeout = (promise, ms = 5000) => {
+const withTimeout = (promise, ms = 10000) => {
     return new Promise((resolve, reject) => {
         const timeoutId = setTimeout(() => {
             reject(new Error('Firebase operation timed out'));
@@ -41,10 +48,10 @@ const withTimeout = (promise, ms = 5000) => {
 const getLocalPOVs = () => {
     try {
         const data = localStorage.getItem(LOCAL_STORAGE_KEY);
-        return data ? JSON.parse(data) : [];
+        return data ? JSON.parse(data) : {};
     } catch (error) {
         console.error('Error reading from localStorage:', error);
-        return [];
+        return {};
     }
 };
 
@@ -57,9 +64,9 @@ const saveLocalPOVs = (povs) => {
 };
 
 /**
- * Create a new POV
+ * Create a new POV in a specific match
  */
-export async function createPOV(povData) {
+export async function createPOV(slotId, matchId, povData) {
     const newPOV = {
         ...povData,
         createdAt: new Date().toISOString(),
@@ -68,28 +75,31 @@ export async function createPOV(povData) {
 
     // Always save to localStorage first as backup/offline mode
     const localPovs = getLocalPOVs();
-    localPovs.push(newPOV);
+    const matchKey = `${slotId}_${matchId}`;
+    if (!localPovs[matchKey]) {
+        localPovs[matchKey] = [];
+    }
+    localPovs[matchKey].push(newPOV);
     saveLocalPOVs(localPovs);
 
     if (isFirebaseAvailable()) {
         try {
-            // Try Firebase with a timeout
-            // We don't wait for this if we want optimistic UI, but for now let's wait with timeout
-            // to get the real ID if possible.
             const docRef = await withTimeout(
-                addDoc(collection(db, COLLECTION_NAME), {
-                    ...povData,
-                    createdAt: Timestamp.now()
-                }),
-                10000 // 10 second timeout for creation
+                addDoc(
+                    collection(db, SLOTS_COLLECTION, slotId, MATCHES_SUBCOLLECTION, matchId, POVS_SUBCOLLECTION),
+                    {
+                        ...povData,
+                        createdAt: Timestamp.now()
+                    }
+                ),
+                10000
             );
 
-            return { ...povData, id: docRef.id };
+            return { ...povData, id: docRef.id, createdAt: new Date().toISOString() };
         } catch (error) {
             console.error('Firebase creation failed:', error);
             toast.error(`Firebase Error: ${error.message}`);
             console.warn('Using local storage fallback');
-            // Fallback to the local POV we already created
             return newPOV;
         }
     } else {
@@ -98,18 +108,22 @@ export async function createPOV(povData) {
 }
 
 /**
- * Get all POVs
+ * Get all POVs for a specific match
  */
-export async function getAllPOVs() {
+export async function getPOVsByMatch(slotId, matchId) {
     if (isFirebaseAvailable()) {
         try {
-            const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+            const q = query(
+                collection(db, SLOTS_COLLECTION, slotId, MATCHES_SUBCOLLECTION, matchId, POVS_SUBCOLLECTION),
+                orderBy('createdAt', 'desc')
+            );
             const querySnapshot = await withTimeout(getDocs(q), 10000);
 
             return querySnapshot.docs.map(doc => ({
                 id: doc.id,
+                slotId,
+                matchId,
                 ...doc.data(),
-                // Convert Firestore Timestamp to ISO string
                 date: doc.data().date instanceof Timestamp
                     ? doc.data().date.toDate().toISOString()
                     : doc.data().date,
@@ -121,39 +135,130 @@ export async function getAllPOVs() {
             console.error('Firebase fetch failed:', error);
             toast.error(`Firebase Connection Error: ${error.message}`);
             console.warn('Using local storage fallback');
-            return getLocalPOVs();
+
+            const localPovs = getLocalPOVs();
+            const matchKey = `${slotId}_${matchId}`;
+            return (localPovs[matchKey] || []).map(pov => ({ ...pov, slotId, matchId }));
         }
     } else {
-        return getLocalPOVs();
+        const localPovs = getLocalPOVs();
+        const matchKey = `${slotId}_${matchId}`;
+        return (localPovs[matchKey] || []).map(pov => ({ ...pov, slotId, matchId }));
+    }
+}
+
+/**
+ * Get ALL POVs across all slots and matches (flattened for global search/stats)
+ */
+export async function getAllPOVs() {
+    if (isFirebaseAvailable()) {
+        try {
+            const allPOVs = [];
+
+            // Get all slots
+            const slotsSnapshot = await getDocs(collection(db, SLOTS_COLLECTION));
+
+            for (const slotDoc of slotsSnapshot.docs) {
+                const slotId = slotDoc.id;
+                const slotData = slotDoc.data();
+
+                // Get all matches in this slot
+                const matchesSnapshot = await getDocs(
+                    collection(db, SLOTS_COLLECTION, slotId, MATCHES_SUBCOLLECTION)
+                );
+
+                for (const matchDoc of matchesSnapshot.docs) {
+                    const matchId = matchDoc.id;
+                    const matchData = matchDoc.data();
+
+                    // Get all POVs in this match
+                    const povsSnapshot = await getDocs(
+                        collection(db, SLOTS_COLLECTION, slotId, MATCHES_SUBCOLLECTION, matchId, POVS_SUBCOLLECTION)
+                    );
+
+                    povsSnapshot.docs.forEach(povDoc => {
+                        const povData = povDoc.data();
+                        allPOVs.push({
+                            id: povDoc.id,
+                            slotId,
+                            slotName: slotData.name,
+                            matchId,
+                            matchNumber: matchData.matchNumber,
+                            ...povData,
+                            date: povData.date instanceof Timestamp
+                                ? povData.date.toDate().toISOString()
+                                : povData.date,
+                            createdAt: povData.createdAt instanceof Timestamp
+                                ? povData.createdAt.toDate().toISOString()
+                                : povData.createdAt
+                        });
+                    });
+                }
+            }
+
+            // Sort by creation date
+            allPOVs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            return allPOVs;
+        } catch (error) {
+            console.error('Firebase fetch all POVs failed:', error);
+            toast.error(`Firebase Connection Error: ${error.message}`);
+            console.warn('Using local storage fallback');
+
+            const localPovs = getLocalPOVs();
+            const flattened = [];
+            for (const [key, povs] of Object.entries(localPovs)) {
+                const [slotId, matchId] = key.split('_');
+                povs.forEach(pov => {
+                    flattened.push({
+                        ...pov,
+                        slotId,
+                        matchId
+                    });
+                });
+            }
+            return flattened;
+        }
+    } else {
+        const localPovs = getLocalPOVs();
+        const flattened = [];
+        for (const [key, povs] of Object.entries(localPovs)) {
+            const [slotId, matchId] = key.split('_');
+            povs.forEach(pov => {
+                flattened.push({
+                    ...pov,
+                    slotId,
+                    matchId
+                });
+            });
+        }
+        return flattened;
     }
 }
 
 /**
  * Delete a POV
  */
-export async function deletePOV(povId) {
+export async function deletePOV(slotId, matchId, povId) {
     // Always delete from local storage
     const povs = getLocalPOVs();
-    const filtered = povs.filter(pov => pov.id !== povId);
-    saveLocalPOVs(filtered);
+    const matchKey = `${slotId}_${matchId}`;
+    if (povs[matchKey]) {
+        povs[matchKey] = povs[matchKey].filter(pov => pov.id !== povId);
+        saveLocalPOVs(povs);
+    }
 
     if (isFirebaseAvailable()) {
         try {
-            await withTimeout(deleteDoc(doc(db, COLLECTION_NAME, povId)), 10000);
+            await withTimeout(
+                deleteDoc(doc(db, SLOTS_COLLECTION, slotId, MATCHES_SUBCOLLECTION, matchId, POVS_SUBCOLLECTION, povId)),
+                10000
+            );
         } catch (error) {
             console.error('Firebase deletion failed:', error);
             toast.error(`Firebase Delete Error: ${error.message}`);
-            // Suppress error since we handled it locally
         }
     }
-}
-
-/**
- * Delete multiple POVs
- */
-export async function deleteBulkPOVs(povIds) {
-    const promises = povIds.map(id => deletePOV(id));
-    await Promise.all(promises);
 }
 
 /**
@@ -166,7 +271,7 @@ export async function getAllPlayers() {
 }
 
 /**
- * Get POVs for a specific player
+ * Get POVs for a specific player (across all slots/matches)
  */
 export async function getPOVsByPlayer(playerName) {
     const povs = await getAllPOVs();
@@ -229,7 +334,7 @@ const saveLocalComments = (comments) => {
 /**
  * Add a comment to a POV
  */
-export async function addComment(povId, text) {
+export async function addComment(slotId, matchId, povId, text) {
     const commentData = {
         text,
         createdAt: new Date().toISOString(),
@@ -239,20 +344,33 @@ export async function addComment(povId, text) {
 
     // Save to local storage first
     const allComments = getLocalComments();
-    if (!allComments[povId]) {
-        allComments[povId] = [];
+    const povKey = `${slotId}_${matchId}_${povId}`;
+    if (!allComments[povKey]) {
+        allComments[povKey] = [];
     }
-    allComments[povId].push(commentData);
+    allComments[povKey].push(commentData);
     saveLocalComments(allComments);
 
     if (isFirebaseAvailable()) {
         try {
             await withTimeout(
-                addDoc(collection(db, COLLECTION_NAME, povId, 'comments'), {
-                    text,
-                    createdAt: Timestamp.now(),
-                    author: 'Anonymous'
-                }),
+                addDoc(
+                    collection(
+                        db,
+                        SLOTS_COLLECTION,
+                        slotId,
+                        MATCHES_SUBCOLLECTION,
+                        matchId,
+                        POVS_SUBCOLLECTION,
+                        povId,
+                        COMMENTS_SUBCOLLECTION
+                    ),
+                    {
+                        text,
+                        createdAt: Timestamp.now(),
+                        author: 'Anonymous'
+                    }
+                ),
                 10000
             );
         } catch (error) {
@@ -267,11 +385,20 @@ export async function addComment(povId, text) {
 /**
  * Get comments for a POV
  */
-export async function getComments(povId) {
+export async function getComments(slotId, matchId, povId) {
     if (isFirebaseAvailable()) {
         try {
             const q = query(
-                collection(db, COLLECTION_NAME, povId, 'comments'),
+                collection(
+                    db,
+                    SLOTS_COLLECTION,
+                    slotId,
+                    MATCHES_SUBCOLLECTION,
+                    matchId,
+                    POVS_SUBCOLLECTION,
+                    povId,
+                    COMMENTS_SUBCOLLECTION
+                ),
                 orderBy('createdAt', 'desc')
             );
             const querySnapshot = await withTimeout(getDocs(q), 10000);
@@ -286,17 +413,23 @@ export async function getComments(povId) {
         } catch (error) {
             console.error('Firebase comments fetch failed:', error);
             toast.error(`Comments Error: ${error.message}`);
+
             // Fallback to local
             const allComments = getLocalComments();
-            return (allComments[povId] || []).sort((a, b) =>
+            const povKey = `${slotId}_${matchId}_${povId}`;
+            return (allComments[povKey] || []).sort((a, b) =>
                 new Date(b.createdAt) - new Date(a.createdAt)
             );
         }
     } else {
         // Local only
         const allComments = getLocalComments();
-        return (allComments[povId] || []).sort((a, b) =>
+        const povKey = `${slotId}_${matchId}_${povId}`;
+        return (allComments[povKey] || []).sort((a, b) =>
             new Date(b.createdAt) - new Date(a.createdAt)
         );
     }
 }
+
+// Export legacy collection name for migration
+export { LEGACY_COLLECTION_NAME };

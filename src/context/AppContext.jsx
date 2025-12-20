@@ -15,7 +15,7 @@ export function useApp() {
 
 export function AppProvider({ children }) {
     // Theme state
-    const [theme, setTheme] = useLocalStorage('theme', 'light');
+    const [theme, setTheme] = useLocalStorage('theme', 'dark');
 
     // View mode state
     const [viewMode, setViewMode] = useLocalStorage('viewMode', 'grid');

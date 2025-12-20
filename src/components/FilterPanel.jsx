@@ -58,7 +58,7 @@ export function FilterPanel() {
                     value={filters.search || ''}
                     onChange={handleSearchChange}
                     placeholder="Search by title or player name... (Ctrl+K)"
-                    className="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-gray-100"
+                    className="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-gray-100"
                 />
                 {filters.search && (
                     <button
@@ -122,7 +122,7 @@ export function FilterPanel() {
                                 type="date"
                                 value={filters.dateFrom ? new Date(filters.dateFrom).toISOString().split('T')[0] : ''}
                                 onChange={handleDateFromChange}
-                                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-gray-100"
+                                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-gray-100"
                             />
                         </div>
                         <div>
@@ -134,7 +134,7 @@ export function FilterPanel() {
                                 type="date"
                                 value={filters.dateTo ? new Date(filters.dateTo).toISOString().split('T')[0] : ''}
                                 onChange={handleDateToChange}
-                                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-gray-100"
+                                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-gray-100"
                             />
                         </div>
                     </div>
