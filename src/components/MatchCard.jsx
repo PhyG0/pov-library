@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Trash2, ChevronRight, Users, Hash, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getMapName } from '../utils/mapUtils';
+import { getMapName, getMapImage } from '../utils/mapUtils';
 
 export function MatchCard({ match, slotId, onDelete }) {
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -43,22 +43,28 @@ export function MatchCard({ match, slotId, onDelete }) {
     };
 
     const mapName = getMapName(match.matchNumber);
+    const mapImage = getMapImage(match.matchNumber);
 
     return (
         <>
             <div
                 onClick={handleCardClick}
-                className="group relative bg-white dark:bg-dark-800 rounded-lg shadow-sm hover:shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200 cursor-pointer hover:border-primary-400 dark:hover:border-primary-500"
+                className="group relative rounded-lg shadow-sm hover:shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200 cursor-pointer hover:border-primary-400 dark:hover:border-primary-500 overflow-hidden"
+                style={{
+                    backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url(${mapImage})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                }}
             >
-                <div className="p-4 sm:p-5">
+                <div className="p-4 sm:p-5 relative z-10">
                     {/* Header */}
                     <div className="flex items-start justify-between mb-3 gap-2">
                         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                            <div className="flex-shrink-0 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
-                                <Hash className="w-4 h-4 sm:w-5 sm:h-5 text-primary-600 dark:text-primary-400" />
+                            <div className="flex-shrink-0 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                                <Hash className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h4 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
+                                <h4 className="text-base sm:text-lg font-bold text-white truncate shadow-sm">
                                     {mapName}
                                 </h4>
                             </div>
@@ -68,7 +74,7 @@ export function MatchCard({ match, slotId, onDelete }) {
                         {!showDeleteDialog && (
                             <button
                                 onClick={handleDelete}
-                                className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-1.5 sm:p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400 flex-shrink-0"
+                                className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-1.5 sm:p-2 hover:bg-red-500/20 rounded-lg text-red-400 hover:text-red-300 flex-shrink-0"
                                 title="Delete match"
                             >
                                 <Trash2 className="w-4 h-4" />
@@ -78,14 +84,14 @@ export function MatchCard({ match, slotId, onDelete }) {
 
                     {/* Stats */}
                     <div className="space-y-2">
-                        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-300">
                             <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                            <span className="font-medium text-primary-600 dark:text-primary-400">
+                            <span className="font-medium text-primary-300">
                                 {match.povCount || 0} POV{match.povCount !== 1 ? 's' : ''}
                             </span>
                         </div>
                         {match.players && match.players.length > 0 && (
-                            <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                            <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-300">
                                 <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                                 <span className="truncate">{match.players.join(', ')}</span>
                             </div>
@@ -93,7 +99,7 @@ export function MatchCard({ match, slotId, onDelete }) {
                     </div>
 
                     {/* View indicator */}
-                    <div className="mt-3 flex items-center justify-end text-primary-600 dark:text-primary-400 text-xs sm:text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="mt-3 flex items-center justify-end text-primary-300 text-xs sm:text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                         <span>View Players</span>
                         <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1" />
                     </div>

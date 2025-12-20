@@ -5,8 +5,13 @@ import { Upload, Inbox } from 'lucide-react';
 export function EmptyState({ message, actionText, actionLink, onActionClick }) {
     return (
         <div className="flex flex-col items-center justify-center py-20 px-4">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center mb-6 animate-pulse-slow">
-                <Inbox className="w-12 h-12 text-primary-600 dark:text-primary-400" />
+            <div className="w-48 h-48 mb-6 relative group">
+                <div className="absolute inset-0 bg-primary-500/20 blur-3xl rounded-full opacity-50 group-hover:opacity-75 transition-opacity duration-500" />
+                <img
+                    src="/images/empty-state.png"
+                    alt="No POVs Found"
+                    className="w-full h-full object-contain relative z-10 drop-shadow-2xl transform group-hover:scale-105 transition-transform duration-500"
+                />
             </div>
 
             <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-2">

@@ -97,13 +97,24 @@ export function ListPage() {
 
             {/* Hero Header */}
             {!loading && (
-                <div className="mb-8 mt-4 animate-fade-in">
-                    <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-indigo-600 dark:from-primary-400 dark:to-indigo-400 mb-2">
-                        POV Library
-                    </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
-                        {povs.length} {povs.length === 1 ? 'recording' : 'recordings'} curated for review
-                    </p>
+                <div className="relative mb-8 mt-4 overflow-hidden rounded-2xl animate-fade-in shadow-xl group">
+                    <div className="absolute inset-0 transform transition-transform duration-700 group-hover:scale-105">
+                        <img
+                            src="/images/hero-bg.png"
+                            alt="Background"
+                            className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/70 to-transparent mix-blend-multiply" />
+                    </div>
+
+                    <div className="relative z-10 p-8 sm:p-12">
+                        <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-3 tracking-tight drop-shadow-lg">
+                            POV Library
+                        </h1>
+                        <p className="text-gray-100 text-lg max-w-xl font-medium opacity-90 drop-shadow-md">
+                            {povs.length} {povs.length === 1 ? 'recording' : 'recordings'} curated for your review.
+                        </p>
+                    </div>
                 </div>
             )}
 

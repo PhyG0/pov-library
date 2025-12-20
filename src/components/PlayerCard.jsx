@@ -18,8 +18,12 @@ export function PlayerCard({ player, slotId, matchId }) {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3 flex-1">
-                        <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 rounded-full">
-                            <User className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+                        <div className="relative flex items-center justify-center w-12 h-12 rounded-full overflow-hidden ring-2 ring-primary-500/20">
+                            <img
+                                src="/images/player-badge.png"
+                                alt={player.playerName}
+                                className="w-full h-full object-cover"
+                            />
                         </div>
                         <div>
                             <h4 className="text-lg font-semibold text-gray-900 dark:text-white">

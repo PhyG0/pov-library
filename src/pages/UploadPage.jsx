@@ -299,13 +299,23 @@ export function UploadPage() {
         <div className="max-w-3xl mx-auto animate-slide-up">
             <Toaster position="top-right" />
 
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                    Upload New POV
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400">
-                    Follow the steps to upload your gameplay recording
-                </p>
+            <div className="relative mb-8 overflow-hidden rounded-2xl">
+                <div className="absolute inset-0">
+                    <img
+                        src="/images/upload-bg.png"
+                        alt="Upload Background"
+                        className="w-full h-full object-cover opacity-30"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary-900/90 via-primary-800/80 to-transparent" />
+                </div>
+                <div className="relative z-10 p-8">
+                    <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
+                        Upload New POV
+                    </h1>
+                    <p className="text-primary-100 drop-shadow-md">
+                        Follow the steps to upload your gameplay recording
+                    </p>
+                </div>
             </div>
 
             <StepIndicator />
