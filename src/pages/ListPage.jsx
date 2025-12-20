@@ -6,6 +6,7 @@ import { POVList } from '../components/POVList';
 import { FilterPanel } from '../components/FilterPanel';
 import { EmptyState } from '../components/EmptyState';
 import { LoadingSkeleton } from '../components/LoadingSkeleton';
+import { PubgLoader } from '../components/PubgLoader';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { VideoModal } from '../components/VideoModal';
 
@@ -138,7 +139,7 @@ export function ListPage() {
             {/* Content */}
             <div className="min-h-[400px]">
                 {loading ? (
-                    <LoadingSkeleton />
+                    <PubgLoader />
                 ) : filteredPOVs.length === 0 ? (
                     povs.length === 0 ? (
                         <EmptyState

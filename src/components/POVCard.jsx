@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Play, Copy, Trash2, Check, X } from 'lucide-react';
 import { getYouTubeThumbnail, getYouTubeWatchUrl } from '../utils/youtubeUtils';
 import { formatDate } from '../utils/dateUtils';
+import { HighlightText } from './HighlightText';
 
-export function POVCard({ pov, onDelete, onPlay }) {
+export function POVCard({ pov, onDelete, onPlay, searchTerm }) {
     const [copied, setCopied] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [deletePassword, setDeletePassword] = useState('');
     const [deleteError, setDeleteError] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleCopyLink = async (e) => {
         e.stopPropagation();
@@ -28,12 +30,19 @@ export function POVCard({ pov, onDelete, onPlay }) {
         setDeleteError('');
     };
 
-    const handleConfirmDelete = (e) => {
+    const handleConfirmDelete = async (e) => {
         e.stopPropagation();
         const requiredPassword = import.meta.env.VITE_DELETE_PASSWORD || 'yes-delete';
         if (deletePassword === requiredPassword) {
-            onDelete(pov);
-            setShowDeleteDialog(false);
+            setIsDeleting(true);
+            try {
+                await onDelete(pov);
+                setShowDeleteDialog(false);
+            } catch (error) {
+                setDeleteError('Failed to delete POV');
+            } finally {
+                setIsDeleting(false);
+            }
         } else {
             setDeleteError('Incorrect password.');
         }
@@ -79,12 +88,12 @@ export function POVCard({ pov, onDelete, onPlay }) {
                 <div className="p-4">
                     {/* Title */}
                     <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 line-clamp-2 text-lg">
-                        {pov.title}
+                        <HighlightText text={pov.title} highlight={searchTerm} />
                     </h3>
 
                     {/* Player name */}
                     <p className="text-primary-600 dark:text-primary-400 font-medium mb-1">
-                        {pov.playerName}
+                        <HighlightText text={pov.playerName} highlight={searchTerm} />
                     </p>
 
                     {/* Date */}
@@ -175,14 +184,16 @@ export function POVCard({ pov, onDelete, onPlay }) {
                             <button
                                 onClick={handleCancelDelete}
                                 className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                disabled={isDeleting}
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleConfirmDelete}
-                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={isDeleting}
                             >
-                                Delete
+                                {isDeleting ? 'Deleting...' : 'Delete'}
                             </button>
                         </div>
                     </div>

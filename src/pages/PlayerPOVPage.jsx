@@ -8,7 +8,7 @@ import { getPOVsByMatch, deletePOV } from '../services/povService';
 import { POVList } from '../components/POVList';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { EmptyState } from '../components/EmptyState';
-import { LoadingSkeleton } from '../components/LoadingSkeleton';
+import { PubgLoader } from '../components/PubgLoader';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { VideoModal } from '../components/VideoModal';
 import { getMapName } from '../utils/mapUtils';
@@ -105,7 +105,7 @@ export function PlayerPOVPage() {
     if (loading) {
         return (
             <div className="animate-fade-in">
-                <LoadingSkeleton />
+                <PubgLoader />
             </div>
         );
     }

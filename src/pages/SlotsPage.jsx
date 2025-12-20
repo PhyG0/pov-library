@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trophy } from 'lucide-react';
+import { Plus, Trophy, Search } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
 import { getAllSlots, deleteSlot, createSlot } from '../services/slotService';
+import { deletePOV } from '../services/povService';
+import { getMapName } from '../utils/mapUtils';
 import { SlotList } from '../components/SlotList';
+import { POVList } from '../components/POVList';
 import { EmptyState } from '../components/EmptyState';
 import { LoadingSkeleton } from '../components/LoadingSkeleton';
+import { PubgLoader } from '../components/PubgLoader';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { VideoModal } from '../components/VideoModal';
 import { getTodayInputFormat } from '../utils/dateUtils';
 
 export function SlotsPage() {
+    const { filters, povs, refreshData } = useApp();
     const [slots, setSlots] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -23,6 +30,14 @@ export function SlotsPage() {
         name: '',
         description: '',
         date: getTodayInputFormat()
+    });
+
+    // Video Modal State
+    const [videoModal, setVideoModal] = useState({
+        isOpen: false,
+        videoId: null,
+        title: '',
+        povId: null
     });
 
     const navigate = useNavigate();
@@ -91,8 +106,89 @@ export function SlotsPage() {
         }
     };
 
+    // Filter slots based on search
+    const filteredSlots = slots.filter(slot => {
+        if (!filters.search) return true;
+
+        const searchLower = filters.search.toLowerCase();
+
+        // Match slot name
+        if (slot.name.toLowerCase().includes(searchLower)) return true;
+
+        // Match POVs inside this slot (by title, player name, or map name)
+        const matchingPovs = povs.filter(pov => {
+            if (pov.slotId !== slot.id) return false;
+
+            const matchesText = pov.title?.toLowerCase().includes(searchLower) ||
+                pov.playerName?.toLowerCase().includes(searchLower);
+
+            const mapName = pov.matchNumber ? getMapName(pov.matchNumber).toLowerCase() : '';
+            const matchesMap = mapName.includes(searchLower);
+
+            return matchesText || matchesMap;
+        });
+
+        return matchingPovs.length > 0;
+    });
+
+    // Filter individual POVs for global search results
+    const matchingPOVs = filters.search ? povs.filter(pov => {
+        const searchLower = filters.search.toLowerCase();
+
+        // Match by title or player name
+        const matchesText = pov.title?.toLowerCase().includes(searchLower) ||
+            pov.playerName?.toLowerCase().includes(searchLower);
+
+        // Match by map name (derived from matchNumber)
+        const mapName = pov.matchNumber ? getMapName(pov.matchNumber).toLowerCase() : '';
+        const matchesMap = mapName.includes(searchLower);
+
+        return matchesText || matchesMap;
+    }) : [];
+
+    // Group matching POVs by slot
+    const povsGroupedBySlot = matchingPOVs.reduce((acc, pov) => {
+        if (!pov.slotId) return acc;
+
+        if (!acc[pov.slotId]) {
+            const slot = slots.find(s => s.id === pov.slotId);
+            acc[pov.slotId] = {
+                slotName: slot?.name || 'Unknown Slot',
+                povs: []
+            };
+        }
+        acc[pov.slotId].povs.push(pov);
+        return acc;
+    }, {});
+
+    // POV action handlers
+    const handleDeletePOV = async (pov) => {
+        try {
+            await deletePOV(pov.slotId, pov.matchId, pov.id);
+            await refreshData();
+            toast.success('POV deleted successfully');
+        } catch (error) {
+            console.error('Delete error:', error);
+            toast.error('Failed to delete POV');
+            throw error; // Re-throw so POVCard can handle it
+        }
+    };
+
+    const handlePlayPOV = (pov) => {
+        setVideoModal({
+            isOpen: true,
+            videoId: pov.videoId,
+            title: pov.title,
+            povId: pov.id
+        });
+    };
+
+    const closeVideoModal = () => {
+        setVideoModal(prev => ({ ...prev, isOpen: false }));
+    };
+
     // Sort slots
-    const sortedSlots = [...slots].sort((a, b) => {
+    const sortedSlots = [...filteredSlots].sort((a, b) => {
         switch (sortBy) {
             case 'oldest':
                 return new Date(a.createdAt) - new Date(b.createdAt);
@@ -109,6 +205,15 @@ export function SlotsPage() {
     return (
         <div className="animate-fade-in relative">
             <Toaster position="top-right" />
+
+            {/* Video Modal */}
+            <VideoModal
+                isOpen={videoModal.isOpen}
+                onClose={closeVideoModal}
+                videoId={videoModal.videoId}
+                title={videoModal.title}
+                povId={videoModal.povId}
+            />
 
             {/* Create Dialog */}
             {showCreateDialog && (
@@ -232,7 +337,7 @@ export function SlotsPage() {
             {/* Content */}
             <div className="min-h-[400px]">
                 {loading ? (
-                    <LoadingSkeleton />
+                    <PubgLoader />
                 ) : slots.length === 0 ? (
                     <EmptyState
                         message="No Slots Created Yet"
@@ -241,10 +346,77 @@ export function SlotsPage() {
                         onActionClick={() => setShowCreateDialog(true)}
                     />
                 ) : (
-                    <SlotList
-                        slots={sortedSlots}
-                        onDeleteSlot={handleDeleteClick}
-                    />
+                    <>
+                        {/* Search Results Summary */}
+                        {filters.search && (sortedSlots.length > 0 || matchingPOVs.length > 0) && (
+                            <div className="mb-6 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg">
+                                <p className="text-sm text-primary-800 dark:text-primary-200">
+                                    <span className="font-semibold">Search results for "{filters.search}":</span>
+                                    {' '}Found {sortedSlots.length} {sortedSlots.length === 1 ? 'slot' : 'slots'}
+                                    {matchingPOVs.length > 0 && ` and ${matchingPOVs.length} individual ${matchingPOVs.length === 1 ? 'POV' : 'POVs'}`}
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Matching Slots */}
+                        {sortedSlots.length > 0 ? (
+                            <SlotList
+                                slots={sortedSlots}
+                                onDeleteSlot={handleDeleteClick}
+                            />
+                        ) : filters.search ? (
+                            // Empty search state
+                            matchingPOVs.length === 0 && (
+                                <div className="text-center py-16">
+                                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full mb-4">
+                                        <Search className="w-8 h-8 text-gray-400" />
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                                        No results found
+                                    </h3>
+                                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                                        No slots or POVs match "{filters.search}"
+                                    </p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-500">
+                                        Try different keywords or check your spelling
+                                    </p>
+                                </div>
+                            )
+                        ) : null}
+
+                        {/* Individual POV Results */}
+                        {filters.search && matchingPOVs.length > 0 && (
+                            <div className="mt-12">
+                                <div className="flex items-center gap-3 mb-6 border-b border-gray-200 dark:border-gray-700 pb-3">
+                                    <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-indigo-600 dark:from-primary-400 dark:to-indigo-400">
+                                        Individual POV Results
+                                    </h2>
+                                    <span className="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm font-medium">
+                                        {matchingPOVs.length} {matchingPOVs.length === 1 ? 'POV' : 'POVs'}
+                                    </span>
+                                </div>
+
+                                {/* Group POVs by Slot */}
+                                {Object.entries(povsGroupedBySlot).map(([slotId, { slotName, povs: slotPOVs }]) => (
+                                    <div key={slotId} className="mb-8">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-600 to-transparent"></div>
+                                            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 px-4 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-full">
+                                                📦 {slotName}
+                                            </h3>
+                                            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-600 to-transparent"></div>
+                                        </div>
+                                        <POVList
+                                            povs={slotPOVs}
+                                            onDeletePOV={handleDeletePOV}
+                                            onPlayPOV={handlePlayPOV}
+                                            searchTerm={filters.search}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

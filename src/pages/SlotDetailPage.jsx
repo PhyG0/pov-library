@@ -7,7 +7,7 @@ import { getMatchesBySlot, createMatch, deleteMatch } from '../services/matchSer
 import { MatchList } from '../components/MatchList';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { EmptyState } from '../components/EmptyState';
-import { LoadingSkeleton } from '../components/LoadingSkeleton';
+import { PubgLoader } from '../components/PubgLoader';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { formatDate } from '../utils/dateUtils';
 
@@ -100,7 +100,7 @@ export function SlotDetailPage() {
     if (loading) {
         return (
             <div className="animate-fade-in">
-                <LoadingSkeleton />
+                <PubgLoader />
             </div>
         );
     }

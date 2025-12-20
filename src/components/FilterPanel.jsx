@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, Calendar, Users, Filter, XCircle } from 'lucide-react';
+import { X, Calendar, Users, Filter } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { getTodayRange, getThisWeekRange, getThisMonthRange } from '../utils/dateUtils';
 import { countActiveFilters } from '../utils/filterUtils';
@@ -8,10 +8,6 @@ export function FilterPanel() {
     const { filters, updateFilters, clearFilters, players } = useApp();
     const [isExpanded, setIsExpanded] = useState(false);
     const activeFilterCount = countActiveFilters(filters);
-
-    const handleSearchChange = (e) => {
-        updateFilters({ search: e.target.value });
-    };
 
     const handlePlayerChange = (playerName) => {
         const currentPlayers = filters.players || [];
@@ -49,26 +45,7 @@ export function FilterPanel() {
 
     return (
         <div className="bg-white dark:bg-dark-800 rounded-xl shadow-md p-4 mb-6 sticky top-4 z-10">
-            {/* Search bar */}
-            <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                    id="pov-search-input"
-                    type="text"
-                    value={filters.search || ''}
-                    onChange={handleSearchChange}
-                    placeholder="Search by title or player name... (Ctrl+K)"
-                    className="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-gray-100"
-                />
-                {filters.search && (
-                    <button
-                        onClick={() => updateFilters({ search: '' })}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                    >
-                        <XCircle className="w-5 h-5" />
-                    </button>
-                )}
-            </div>
+
 
             {/* Toggle filters button */}
             <button

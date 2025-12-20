@@ -8,7 +8,7 @@ import { getPOVsByMatch } from '../services/povService';
 import { PlayerList } from '../components/PlayerList';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { EmptyState } from '../components/EmptyState';
-import { LoadingSkeleton } from '../components/LoadingSkeleton';
+import { PubgLoader } from '../components/PubgLoader';
 import { getMapName, getMapImage } from '../utils/mapUtils';
 
 export function MatchDetailPage() {
@@ -70,7 +70,7 @@ export function MatchDetailPage() {
     if (loading) {
         return (
             <div className="animate-fade-in">
-                <LoadingSkeleton />
+                <PubgLoader />
             </div>
         );
     }

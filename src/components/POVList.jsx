@@ -2,7 +2,7 @@ import React from 'react';
 import { groupPOVsByDate } from '../utils/dateUtils';
 import { POVCard } from './POVCard';
 
-export function POVList({ povs, onDeletePOV, onPlayPOV }) {
+export function POVList({ povs, onDeletePOV, onPlayPOV, searchTerm }) {
     const groupedPOVs = groupPOVsByDate(povs);
     const dateGroups = Object.entries(groupedPOVs).sort((a, b) =>
         new Date(b[1][0].date) - new Date(a[1][0].date)
@@ -29,7 +29,7 @@ export function POVList({ povs, onDeletePOV, onPlayPOV }) {
                     {/* POV grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {datePOVs.map((pov) => (
-                            <POVCard key={pov.id} pov={pov} onDelete={onDeletePOV} onPlay={onPlayPOV} />
+                            <POVCard key={pov.id} pov={pov} onDelete={onDeletePOV} onPlay={onPlayPOV} searchTerm={searchTerm} />
                         ))}
                     </div>
                 </div>
