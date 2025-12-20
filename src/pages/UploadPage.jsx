@@ -220,8 +220,6 @@ export function UploadPage() {
             date: getTodayInputFormat(),
             youtubeUrl: ''
         });
-        setIsNewPlayer(false);
-        setNewPlayerName('');
         setShowSuccess(false);
         setIsCreatingSlot(false);
         setIsCreatingMatch(false);
@@ -254,10 +252,16 @@ export function UploadPage() {
                         </button>
 
                         <button
-                            onClick={() => navigate(`/slots/${selectedSlot.id}/matches/${selectedMatch.id}`)}
+                            onClick={() => {
+                                if (selectedSlot?.id && selectedMatch?.id && formData.playerName) {
+                                    navigate(`/slots/${selectedSlot.id}/matches/${selectedMatch.id}/players/${formData.playerName}`);
+                                } else {
+                                    toast.error('Unable to navigate: missing data');
+                                }
+                            }}
                             className="flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium transition-all shadow-lg hover:shadow-primary-500/30"
                         >
-                            View Match
+                            View Player POVs
                             <ArrowRight className="w-5 h-5" />
                         </button>
                     </div>
@@ -265,6 +269,7 @@ export function UploadPage() {
             </div>
         );
     }
+
 
     // Step Indicator
     const StepIndicator = () => (
