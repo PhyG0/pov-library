@@ -13,6 +13,7 @@ import { LoadingSkeleton } from '../components/LoadingSkeleton';
 import { PubgLoader } from '../components/PubgLoader';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { VideoModal } from '../components/VideoModal';
+import { PasswordModal } from '../components/PasswordModal';
 import { getTodayInputFormat } from '../utils/dateUtils';
 
 export function SlotsPage() {
@@ -40,6 +41,12 @@ export function SlotsPage() {
         povId: null
     });
 
+    // Password Modal State
+    const [passwordModal, setPasswordModal] = useState({
+        isOpen: false,
+        onSuccess: null
+    });
+
     const navigate = useNavigate();
 
     // Load slots
@@ -60,7 +67,7 @@ export function SlotsPage() {
         }
     };
 
-    const handleCreateSlot = async (e) => {
+    const handleCreateSlot = (e) => {
         e.preventDefault();
 
         if (!newSlot.name.trim()) {
@@ -68,6 +75,14 @@ export function SlotsPage() {
             return;
         }
 
+        // Open password modal
+        setPasswordModal({
+            isOpen: true,
+            onSuccess: performCreateSlot
+        });
+    };
+
+    const performCreateSlot = async () => {
         setIsCreating(true);
         try {
             await createSlot(newSlot);
@@ -214,6 +229,13 @@ export function SlotsPage() {
                     videoId={videoModal.videoId}
                     title={videoModal.title}
                     povId={videoModal.povId}
+                />
+
+                {/* Password Modal */}
+                <PasswordModal
+                    isOpen={passwordModal.isOpen}
+                    onClose={() => setPasswordModal({ ...passwordModal, isOpen: false })}
+                    onSuccess={passwordModal.onSuccess}
                 />
 
                 {/* Create Dialog */}

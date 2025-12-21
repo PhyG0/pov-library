@@ -9,6 +9,7 @@ import { Breadcrumb } from '../components/Breadcrumb';
 import { EmptyState } from '../components/EmptyState';
 import { PubgLoader } from '../components/PubgLoader';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { PasswordModal } from '../components/PasswordModal';
 import { formatDate } from '../utils/dateUtils';
 
 export function SlotDetailPage() {
@@ -23,6 +24,10 @@ export function SlotDetailPage() {
     const [matchToDelete, setMatchToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
+    const [passwordModal, setPasswordModal] = useState({
+        isOpen: false,
+        onSuccess: null
+    });
 
     const [newMatch, setNewMatch] = useState({
         matchNumber: 1,
@@ -57,9 +62,17 @@ export function SlotDetailPage() {
         }
     };
 
-    const handleCreateMatch = async (e) => {
+    const handleCreateMatch = (e) => {
         e.preventDefault();
 
+        // Open password modal
+        setPasswordModal({
+            isOpen: true,
+            onSuccess: performCreateMatch
+        });
+    };
+
+    const performCreateMatch = async () => {
         setIsCreating(true);
         try {
             await createMatch(slotId, newMatch);
@@ -175,6 +188,13 @@ export function SlotDetailPage() {
                 confirmText="Delete"
                 danger={true}
                 isLoading={isDeleting}
+            />
+
+            {/* Password Modal */}
+            <PasswordModal
+                isOpen={passwordModal.isOpen}
+                onClose={() => setPasswordModal({ ...passwordModal, isOpen: false })}
+                onSuccess={passwordModal.onSuccess}
             />
 
             {/* Header */}

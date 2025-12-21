@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Upload, Plus, Calendar, ArrowRight, ArrowLeft, Check, Trophy, Hash, ChevronDown } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
+import { PasswordModal } from '../components/PasswordModal';
 import { getAllSlots, createSlot } from '../services/slotService';
 import { getMatchesBySlot, createMatch } from '../services/matchService';
 import { createPOV } from '../services/povService';
@@ -19,6 +20,10 @@ export function UploadPage() {
     const [matches, setMatches] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [passwordModal, setPasswordModal] = useState({
+        isOpen: false,
+        onSuccess: null
+    });
 
     // Step 1: Slot data
     const [selectedSlot, setSelectedSlot] = useState(null);
@@ -115,12 +120,19 @@ export function UploadPage() {
 
 
     // Step 1: Create or select slot
-    const handleCreateSlot = async () => {
+    const handleCreateSlot = () => {
         if (!newSlot.name.trim()) {
             toast.error('Please enter a slot name');
             return;
         }
 
+        setPasswordModal({
+            isOpen: true,
+            onSuccess: performCreateSlot
+        });
+    };
+
+    const performCreateSlot = async () => {
         setIsSubmitting(true);
         try {
             const created = await createSlot(newSlot);
@@ -143,9 +155,16 @@ export function UploadPage() {
     };
 
     // Step 2: Create or select match
-    const handleCreateMatch = async () => {
+    const handleCreateMatch = () => {
         if (!selectedSlot?.id) return;
 
+        setPasswordModal({
+            isOpen: true,
+            onSuccess: performCreateMatch
+        });
+    };
+
+    const performCreateMatch = async () => {
         setIsSubmitting(true);
         try {
             const created = await createMatch(selectedSlot.id, newMatch);
@@ -167,7 +186,7 @@ export function UploadPage() {
     };
 
     // Step 3: Upload POV
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
 
         if (!formData.playerName) {
@@ -185,6 +204,13 @@ export function UploadPage() {
             return;
         }
 
+        setPasswordModal({
+            isOpen: true,
+            onSuccess: performPOVUpload
+        });
+    };
+
+    const performPOVUpload = async () => {
         setIsSubmitting(true);
 
         try {
@@ -296,350 +322,361 @@ export function UploadPage() {
     );
 
     return (
-        <div className="max-w-3xl mx-auto animate-slide-up">
-            <Toaster position="top-right" />
+        <>
+            <div className="max-w-3xl mx-auto animate-slide-up">
+                <Toaster position="top-right" />
 
-            <div className="relative mb-8 overflow-hidden rounded-2xl">
-                <div className="absolute inset-0">
-                    <img
-                        src="/images/upload-bg.png"
-                        alt="Upload Background"
-                        className="w-full h-full object-cover opacity-30"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary-900/90 via-primary-800/80 to-transparent" />
+                <div className="relative mb-8 overflow-hidden rounded-2xl">
+                    <div className="absolute inset-0">
+                        <img
+                            src="/images/upload-bg.png"
+                            alt="Upload Background"
+                            className="w-full h-full object-cover opacity-30"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary-900/90 via-primary-800/80 to-transparent" />
+                    </div>
+                    <div className="relative z-10 p-8">
+                        <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
+                            Upload New POV
+                        </h1>
+                        <p className="text-primary-100 drop-shadow-md">
+                            Follow the steps to upload your gameplay recording
+                        </p>
+                    </div>
                 </div>
-                <div className="relative z-10 p-8">
-                    <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
-                        Upload New POV
-                    </h1>
-                    <p className="text-primary-100 drop-shadow-md">
-                        Follow the steps to upload your gameplay recording
-                    </p>
-                </div>
-            </div>
 
-            <StepIndicator />
 
-            <div className="bg-white/90 dark:bg-gray-900/60 backdrop-blur-md border border-white/20 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden">
-                <div className="p-6 md:p-8">
 
-                    {/* STEP 1: Select/Create Slot */}
-                    {currentStep === 1 && (
-                        <div className="space-y-6 animate-fade-in">
-                            <div className="flex items-center gap-3 mb-6">
-                                <Trophy className="w-6 h-6 text-primary-600" />
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                    Select or Create Slot
-                                </h2>
-                            </div>
+                <StepIndicator />
 
-                            {!isCreatingSlot ? (
-                                <>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-                                        {slots.map(slot => (
-                                            <button
-                                                key={slot.id}
-                                                onClick={() => handleSelectSlot(slot)}
-                                                className="text-left p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all group"
-                                            >
-                                                <div className="flex justify-between items-start mb-1">
-                                                    <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400">
-                                                        {slot.name}
-                                                    </h3>
-                                                    <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">
-                                                        {formatDate(slot.date)}
-                                                    </span>
-                                                </div>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    {slot.matchCount || 0} matches · {slot.povCount || 0} POVs
-                                                </p>
-                                            </button>
-                                        ))}
-                                    </div>
+                <div className="bg-white/90 dark:bg-gray-900/60 backdrop-blur-md border border-white/20 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden">
+                    <div className="p-6 md:p-8">
 
-                                    <button
-                                        onClick={() => setIsCreatingSlot(true)}
-                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all"
-                                    >
-                                        <Plus className="w-5 h-5" />
-                                        Create New Slot
-                                    </button>
-                                </>
-                            ) : (
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Slot Name <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={newSlot.name}
-                                            onChange={(e) => setNewSlot({ ...newSlot, name: e.target.value })}
-                                            placeholder="e.g., 3k Semis, Finals"
-                                            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
-                                            autoFocus
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Description
-                                        </label>
-                                        <textarea
-                                            value={newSlot.description}
-                                            onChange={(e) => setNewSlot({ ...newSlot, description: e.target.value })}
-                                            placeholder="Optional description"
-                                            rows={2}
-                                            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white resize-none"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Date
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={newSlot.date}
-                                            onChange={(e) => setNewSlot({ ...newSlot, date: e.target.value })}
-                                            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
-                                        />
-                                    </div>
-                                    <div className="flex gap-3">
-                                        <button
-                                            onClick={handleCreateSlot}
-                                            disabled={isSubmitting}
-                                            className="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50"
-                                        >
-                                            {isSubmitting ? 'Creating...' : 'Create & Continue'}
-                                        </button>
-                                        <button
-                                            onClick={() => setIsCreatingSlot(false)}
-                                            disabled={isSubmitting}
-                                            className="px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* STEP 2: Select/Create Match */}
-                    {currentStep === 2 && (
-                        <div className="space-y-6 animate-fade-in">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-3">
-                                    <Hash className="w-6 h-6 text-primary-600" />
+                        {/* STEP 1: Select/Create Slot */}
+                        {currentStep === 1 && (
+                            <div className="space-y-6 animate-fade-in">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <Trophy className="w-6 h-6 text-primary-600" />
                                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                        Select or Create Match
+                                        Select or Create Slot
                                     </h2>
                                 </div>
-                                <button
-                                    onClick={() => setCurrentStep(1)}
-                                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
-                                >
-                                    <ArrowLeft className="w-4 h-4 inline mr-1" />
-                                    Back
-                                </button>
-                            </div>
 
-                            <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg mb-4 border border-gray-300 dark:border-gray-600">
-                                <p className="text-sm text-gray-700 dark:text-gray-300">
-                                    Slot: <span className="font-semibold text-gray-900 dark:text-white">{selectedSlot?.name}</span>
-                                </p>
-                            </div>
-
-                            {!isCreatingMatch ? (
-                                <>
-                                    <div className="space-y-3 max-h-96 overflow-y-auto">
-                                        {matches.map(match => (
-                                            <button
-                                                key={match.id}
-                                                onClick={() => handleSelectMatch(match)}
-                                                className="w-full text-left p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all group"
-                                            >
-                                                <h3 className="font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400">
-                                                    {getMapName(match.matchNumber)}
-                                                </h3>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    {match.povCount || 0} POVs uploaded
-                                                </p>
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    <button
-                                        onClick={() => setIsCreatingMatch(true)}
-                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all"
-                                    >
-                                        <Plus className="w-5 h-5" />
-                                        Create New Match
-                                    </button>
-                                </>
-                            ) : (
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Map <span className="text-red-500">*</span>
-                                        </label>
-                                        <select
-                                            value={newMatch.matchNumber}
-                                            onChange={(e) => setNewMatch({ ...newMatch, matchNumber: parseInt(e.target.value) })}
-                                            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
-                                            autoFocus
-                                        >
-                                            <option value="">Select a map</option>
-                                            <option value="1">Erangle</option>
-                                            <option value="2">Miramar</option>
-                                            <option value="3">Rondo</option>
-                                            <option value="4">Sanhok</option>
-                                            <option value="5">Other</option>
-                                        </select>
-                                    </div>
-                                    <div className="flex gap-3">
-                                        <button
-                                            onClick={handleCreateMatch}
-                                            disabled={isSubmitting}
-                                            className="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50"
-                                        >
-                                            {isSubmitting ? 'Creating...' : 'Create & Continue'}
-                                        </button>
-                                        <button
-                                            onClick={() => setIsCreatingMatch(false)}
-                                            disabled={isSubmitting}
-                                            className="px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* STEP 3: Upload POV */}
-                    {currentStep === 3 && (
-                        <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-3">
-                                    <Upload className="w-6 h-6 text-primary-600" />
-                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                        Upload POV Details
-                                    </h2>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setCurrentStep(2)}
-                                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
-                                >
-                                    <ArrowLeft className="w-4 h-4 inline mr-1" />
-                                    Back
-                                </button>
-                            </div>
-
-                            <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg mb-4 space-y-1 border border-gray-300 dark:border-gray-600">
-                                <p className="text-sm text-gray-700 dark:text-gray-300">
-                                    Slot: <span className="font-semibold text-gray-900 dark:text-white">{selectedSlot?.name}</span>
-                                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({formatDate(selectedSlot?.date)})</span>
-                                </p>
-                                <p className="text-sm text-gray-700 dark:text-gray-300">
-                                    Match: <span className="font-semibold text-gray-900 dark:text-white">{getMapName(selectedMatch?.matchNumber)}</span>
-                                </p>
-                            </div>
-
-                            {/* Player Selection */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Player Name
-                                </label>
-                                <select
-                                    name="playerName"
-                                    value={formData.playerName}
-                                    onChange={(e) => setFormData({ ...formData, playerName: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
-                                    required
-                                >
-                                    <option value="">Select a player</option>
-                                    {FIXED_PLAYERS.map(player => (
-                                        <option key={player} value={player}>{player}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Title */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    POV Title
-                                </label>
-                                <input
-                                    type="text"
-                                    name="title"
-                                    value={formData.title}
-                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    placeholder="e.g., My perspective"
-                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
-                                />
-                            </div>
-
-                            {/* Date */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Date Played
-                                </label>
-                                <div className="relative">
-                                    <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    <input
-                                        type="date"
-                                        name="date"
-                                        value={formData.date}
-                                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                        className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* YouTube URL */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    YouTube URL
-                                </label>
-                                <input
-                                    type="url"
-                                    name="youtubeUrl"
-                                    value={formData.youtubeUrl}
-                                    onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
-                                    placeholder="https://www.youtube.com/watch?v=..."
-                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
-                                />
-                                <YouTubeThumbnailPreview url={formData.youtubeUrl} />
-                            </div>
-
-                            {/* Submit */}
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-white shadow-lg transition-all ${isSubmitting
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600'
-                                    }`}
-                            >
-                                {isSubmitting ? (
+                                {!isCreatingSlot ? (
                                     <>
-                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        Uploading...
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                                            {slots.map(slot => (
+                                                <button
+                                                    key={slot.id}
+                                                    onClick={() => handleSelectSlot(slot)}
+                                                    className="text-left p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all group"
+                                                >
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400">
+                                                            {slot.name}
+                                                        </h3>
+                                                        <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">
+                                                            {formatDate(slot.date)}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                        {slot.matchCount || 0} matches · {slot.povCount || 0} POVs
+                                                    </p>
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <button
+                                            onClick={() => setIsCreatingSlot(true)}
+                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all"
+                                        >
+                                            <Plus className="w-5 h-5" />
+                                            Create New Slot
+                                        </button>
                                     </>
                                 ) : (
-                                    <>
-                                        <Upload className="w-5 h-5" />
-                                        Upload POV
-                                    </>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Slot Name <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={newSlot.name}
+                                                onChange={(e) => setNewSlot({ ...newSlot, name: e.target.value })}
+                                                placeholder="e.g., 3k Semis, Finals"
+                                                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
+                                                autoFocus
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Description
+                                            </label>
+                                            <textarea
+                                                value={newSlot.description}
+                                                onChange={(e) => setNewSlot({ ...newSlot, description: e.target.value })}
+                                                placeholder="Optional description"
+                                                rows={2}
+                                                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white resize-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Date
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={newSlot.date}
+                                                onChange={(e) => setNewSlot({ ...newSlot, date: e.target.value })}
+                                                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
+                                            />
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={handleCreateSlot}
+                                                disabled={isSubmitting}
+                                                className="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50"
+                                            >
+                                                {isSubmitting ? 'Creating...' : 'Create & Continue'}
+                                            </button>
+                                            <button
+                                                onClick={() => setIsCreatingSlot(false)}
+                                                disabled={isSubmitting}
+                                                className="px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
                                 )}
-                            </button>
-                        </form>
-                    )}
+                            </div>
+                        )}
 
+                        {/* STEP 2: Select/Create Match */}
+                        {currentStep === 2 && (
+                            <div className="space-y-6 animate-fade-in">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-3">
+                                        <Hash className="w-6 h-6 text-primary-600" />
+                                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                            Select or Create Match
+                                        </h2>
+                                    </div>
+                                    <button
+                                        onClick={() => setCurrentStep(1)}
+                                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+                                    >
+                                        <ArrowLeft className="w-4 h-4 inline mr-1" />
+                                        Back
+                                    </button>
+                                </div>
+
+                                <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg mb-4 border border-gray-300 dark:border-gray-600">
+                                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                                        Slot: <span className="font-semibold text-gray-900 dark:text-white">{selectedSlot?.name}</span>
+                                    </p>
+                                </div>
+
+                                {!isCreatingMatch ? (
+                                    <>
+                                        <div className="space-y-3 max-h-96 overflow-y-auto">
+                                            {matches.map(match => (
+                                                <button
+                                                    key={match.id}
+                                                    onClick={() => handleSelectMatch(match)}
+                                                    className="w-full text-left p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all group"
+                                                >
+                                                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400">
+                                                        {getMapName(match.matchNumber)}
+                                                    </h3>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                        {match.povCount || 0} POVs uploaded
+                                                    </p>
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <button
+                                            onClick={() => setIsCreatingMatch(true)}
+                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all"
+                                        >
+                                            <Plus className="w-5 h-5" />
+                                            Create New Match
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Map <span className="text-red-500">*</span>
+                                            </label>
+                                            <select
+                                                value={newMatch.matchNumber}
+                                                onChange={(e) => setNewMatch({ ...newMatch, matchNumber: parseInt(e.target.value) })}
+                                                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
+                                                autoFocus
+                                            >
+                                                <option value="">Select a map</option>
+                                                <option value="1">Erangle</option>
+                                                <option value="2">Miramar</option>
+                                                <option value="3">Rondo</option>
+                                                <option value="4">Sanhok</option>
+                                                <option value="5">Other</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={handleCreateMatch}
+                                                disabled={isSubmitting}
+                                                className="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50"
+                                            >
+                                                {isSubmitting ? 'Creating...' : 'Create & Continue'}
+                                            </button>
+                                            <button
+                                                onClick={() => setIsCreatingMatch(false)}
+                                                disabled={isSubmitting}
+                                                className="px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* STEP 3: Upload POV */}
+                        {currentStep === 3 && (
+                            <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-3">
+                                        <Upload className="w-6 h-6 text-primary-600" />
+                                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                            Upload POV Details
+                                        </h2>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCurrentStep(2)}
+                                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+                                    >
+                                        <ArrowLeft className="w-4 h-4 inline mr-1" />
+                                        Back
+                                    </button>
+                                </div>
+
+                                <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg mb-4 space-y-1 border border-gray-300 dark:border-gray-600">
+                                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                                        Slot: <span className="font-semibold text-gray-900 dark:text-white">{selectedSlot?.name}</span>
+                                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({formatDate(selectedSlot?.date)})</span>
+                                    </p>
+                                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                                        Match: <span className="font-semibold text-gray-900 dark:text-white">{getMapName(selectedMatch?.matchNumber)}</span>
+                                    </p>
+                                </div>
+
+                                {/* Player Selection */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Player Name
+                                    </label>
+                                    <select
+                                        name="playerName"
+                                        value={formData.playerName}
+                                        onChange={(e) => setFormData({ ...formData, playerName: e.target.value })}
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
+                                        required
+                                    >
+                                        <option value="">Select a player</option>
+                                        {FIXED_PLAYERS.map(player => (
+                                            <option key={player} value={player}>{player}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Title */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        POV Title
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="title"
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                        placeholder="e.g., My perspective"
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
+                                    />
+                                </div>
+
+                                {/* Date */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Date Played
+                                    </label>
+                                    <div className="relative">
+                                        <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                        <input
+                                            type="date"
+                                            name="date"
+                                            value={formData.date}
+                                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                            className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* YouTube URL */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        YouTube URL
+                                    </label>
+                                    <input
+                                        type="url"
+                                        name="youtubeUrl"
+                                        value={formData.youtubeUrl}
+                                        onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
+                                        placeholder="https://www.youtube.com/watch?v=..."
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
+                                    />
+                                    <YouTubeThumbnailPreview url={formData.youtubeUrl} />
+                                </div>
+
+                                {/* Submit */}
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-white shadow-lg transition-all ${isSubmitting
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600'
+                                        }`}
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            Uploading...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload className="w-5 h-5" />
+                                            Upload POV
+                                        </>
+                                    )}
+                                </button>
+                            </form>
+                        )}
+
+                    </div>
                 </div>
             </div>
-        </div>
+
+
+            <PasswordModal
+                isOpen={passwordModal.isOpen}
+                onClose={() => setPasswordModal({ ...passwordModal, isOpen: false })}
+                onSuccess={passwordModal.onSuccess}
+            />
+        </>
     );
 }
