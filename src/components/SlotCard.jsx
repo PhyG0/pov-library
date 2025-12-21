@@ -46,7 +46,7 @@ export function SlotCard({ slot, onDelete }) {
         <>
             <div
                 onClick={handleCardClick}
-                className="group relative bg-white dark:bg-dark-800 rounded-lg shadow-sm hover:shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200 cursor-pointer hover:border-primary-400 dark:hover:border-primary-500"
+                className="group relative bg-white/90 dark:bg-gray-900/60 backdrop-blur-md rounded-lg shadow-sm hover:shadow-xl border border-white/20 dark:border-white/10 transition-all duration-300 cursor-pointer hover:border-primary-400/50 dark:hover:border-primary-500/50 overflow-hidden"
             >
                 {/* Gradient accent bar */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 to-indigo-500"></div>

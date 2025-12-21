@@ -229,7 +229,7 @@ export function UploadPage() {
     if (showSuccess) {
         return (
             <div className="max-w-2xl mx-auto animate-fade-in">
-                <div className="bg-white dark:bg-dark-800 rounded-2xl shadow-xl p-8 text-center">
+                <div className="bg-white/90 dark:bg-gray-900/60 backdrop-blur-md border border-white/20 dark:border-white/10 rounded-2xl shadow-xl p-8 text-center">
                     <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900 mx-auto flex items-center justify-center mb-6">
                         <Check className="w-10 h-10 text-green-600 dark:text-green-400" />
                     </div>
@@ -320,7 +320,7 @@ export function UploadPage() {
 
             <StepIndicator />
 
-            <div className="bg-white dark:bg-dark-800 rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-white/90 dark:bg-gray-900/60 backdrop-blur-md border border-white/20 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden">
                 <div className="p-6 md:p-8">
 
                     {/* STEP 1: Select/Create Slot */}

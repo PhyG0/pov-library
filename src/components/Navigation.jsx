@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Upload, Search, X } from 'lucide-react';
+import { Home, Upload, Search, X, Trophy } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export function Navigation() {
@@ -56,28 +56,30 @@ export function Navigation() {
     return (
         <>
             {/* Desktop Navigation - Top Bar */}
-            <nav className="hidden md:block bg-white dark:bg-dark-800 shadow-md sticky top-0 z-50">
+            <nav className="hidden md:block bg-white/80 dark:bg-gray-900/60 backdrop-blur-md sticky top-0 z-50 border-b border-gray-200/50 dark:border-white/5">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         {/* Logo and brand */}
                         <div className="flex items-center gap-3">
-                            <img src="/images/logo.png" alt="Eclipse POV Logo" className="w-10 h-10 object-contain" />
-                            <Link to="/" className="text-2xl font-bold gradient-text hover:opacity-80 transition-opacity">
-                                Eclipse POV
+                            <div className="bg-gradient-to-br from-primary-500 to-indigo-600 text-white p-1.5 rounded-lg shadow-lg shadow-primary-500/20">
+                                <Trophy className="w-5 h-5" />
+                            </div>
+                            <Link to="/" className="text-xl font-bold text-gray-900 dark:text-white tracking-tight hover:opacity-80 transition-opacity">
+                                Eclipse <span className="text-primary-600 dark:text-primary-400">POV</span>
                             </Link>
                         </div>
 
                         {/* Search Bar */}
                         <div className="flex-1 max-w-lg mx-8">
                             <div className="relative group">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
                                 <input
                                     ref={searchInputRef}
                                     type="text"
-                                    placeholder="Search players, matches, or titles... (Press / to focus)"
+                                    placeholder="Search players, matches, or titles... (Press /)"
                                     value={filters.search}
                                     onChange={handleSearchChange}
-                                    className="w-full bg-gray-50 dark:bg-gray-800 border-none ring-1 ring-gray-200 dark:ring-gray-700 rounded-full py-2 pl-10 pr-10 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-900 transition-all"
+                                    className="w-full bg-gray-100/50 dark:bg-gray-800/50 border-none ring-1 ring-gray-200 dark:ring-white/10 rounded-lg py-2 pl-9 pr-9 text-sm text-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500/50 focus:bg-white dark:focus:bg-gray-900 transition-all"
                                 />
                                 {filters.search && (
                                     <button
@@ -85,24 +87,24 @@ export function Navigation() {
                                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                                         aria-label="Clear search"
                                     >
-                                        <X className="w-5 h-5" />
+                                        <X className="w-4 h-4" />
                                     </button>
                                 )}
                             </div>
                         </div>
 
                         {/* Navigation links */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
                             {navItems.map(({ path, label, icon: Icon }) => (
                                 <Link
                                     key={path}
                                     to={path}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${isActive(path)
-                                        ? 'bg-primary-600 text-white shadow-lg'
-                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive(path)
+                                        ? 'bg-primary-50 dark:bg-white/10 text-primary-600 dark:text-white'
+                                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
                                         }`}
                                 >
-                                    <Icon className="w-5 h-5" />
+                                    <Icon className="w-4 h-4" />
                                     {label}
                                 </Link>
                             ))}
@@ -112,7 +114,7 @@ export function Navigation() {
             </nav>
 
             {/* Mobile Navigation - Bottom Bar */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-800 shadow-2xl border-t border-gray-200 dark:border-gray-700 z-50">
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg shadow-2xl border-t border-gray-200 dark:border-white/5 z-50">
                 <div className="flex justify-around items-center h-16">
                     {navItems.map(({ path, label, icon: Icon }) => (
                         <Link
