@@ -22,3 +22,16 @@ export const MAP_IMAGES = {
 export const getMapImage = (matchNumber) => {
     return MAP_IMAGES[matchNumber] || MAP_IMAGES[5];
 };
+
+export const MAP_THUMBNAILS = {
+    1: '/images/thumbnails/thumb_erangel_1766320272474.png',
+    2: '/images/thumbnails/thumb_miramar_1766320291167.png',
+    3: '/images/thumbnails/thumb_rondo_1766320342029.png',
+    4: '/images/thumbnails/thumb_sanhok_1766320309872.png',
+    5: '/images/thumbnails/thumb_other_1766320395265.png',
+    6: '/images/thumbnails/thumb_vikendi_1766320326215.png'
+};
+
+export const getMapThumbnail = (matchNumber) => {
+    return MAP_THUMBNAILS[matchNumber] || MAP_THUMBNAILS[5];
+};

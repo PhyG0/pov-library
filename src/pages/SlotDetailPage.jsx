@@ -10,6 +10,7 @@ import { EmptyState } from '../components/EmptyState';
 import { PubgLoader } from '../components/PubgLoader';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { PasswordModal } from '../components/PasswordModal';
+import { SEO } from '../components/SEO';
 import { formatDate } from '../utils/dateUtils';
 
 export function SlotDetailPage() {
@@ -124,6 +125,10 @@ export function SlotDetailPage() {
 
     return (
         <div className="animate-fade-in relative">
+            <SEO
+                title={`${slot.name} ${slot.date ? `(${formatDate(slot.date)})` : ''}`}
+                description={slot.description || `View matches and POVs for ${slot.name}`}
+            />
             <Toaster position="top-right" />
 
             {/* Breadcrumb */}

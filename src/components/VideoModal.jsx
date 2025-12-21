@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Send, User } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { addComment, getComments } from '../services/povService';
@@ -59,8 +60,8 @@ export function VideoModal({ isOpen, onClose, videoId, title, povId, slotId, mat
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 p-0 sm:p-4">
+    return createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-90 p-0 sm:p-4">
             {/* Backdrop */}
             <div className="absolute inset-0" onClick={onClose} />
 
@@ -172,6 +173,7 @@ export function VideoModal({ isOpen, onClose, videoId, title, povId, slotId, mat
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

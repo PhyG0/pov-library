@@ -640,7 +640,10 @@ export function UploadPage() {
                                         placeholder="https://www.youtube.com/watch?v=..."
                                         className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
                                     />
-                                    <YouTubeThumbnailPreview url={formData.youtubeUrl} />
+                                    <YouTubeThumbnailPreview
+                                        url={formData.youtubeUrl}
+                                        matchNumber={selectedMatch?.matchNumber}
+                                    />
                                 </div>
 
                                 {/* Submit */}
