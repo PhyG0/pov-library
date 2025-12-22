@@ -12,6 +12,8 @@ import { PubgLoader } from '../components/PubgLoader';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { VideoModal } from '../components/VideoModal';
 import { getMapName } from '../utils/mapUtils';
+import { formatDate } from '../utils/dateUtils';
+import { SEO } from '../components/SEO';
 
 export function PlayerPOVPage() {
     const { slotId, matchId, playerName } = useParams();
@@ -116,6 +118,10 @@ export function PlayerPOVPage() {
 
     return (
         <div className="animate-fade-in relative">
+            <SEO
+                title={`${decodedPlayerName} - ${slot.name} (${formatDate(slot.date)})`}
+                description={`Watch ${decodedPlayerName}'s POVs from ${slot.name} - ${formatDate(slot.date)}`}
+            />
             <Toaster position="top-right" />
 
             {/* Video Modal */}

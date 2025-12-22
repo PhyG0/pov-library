@@ -15,6 +15,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { VideoModal } from '../components/VideoModal';
 import { PasswordModal } from '../components/PasswordModal';
 import { getTodayInputFormat } from '../utils/dateUtils';
+import { SEO } from '../components/SEO';
 
 export function SlotsPage() {
     const { filters, povs, refreshData } = useApp();
@@ -220,6 +221,10 @@ export function SlotsPage() {
     return (
         <div className="animate-fade-in relative min-h-[calc(100vh-64px)] overflow-hidden">
             <div className="relative z-10">
+                <SEO
+                    title="Home"
+                    description="View and manage your team's gameplay POVs and match recordings."
+                />
                 <Toaster position="top-right" />
 
                 {/* Video Modal */}

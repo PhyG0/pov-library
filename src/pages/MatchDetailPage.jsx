@@ -10,6 +10,7 @@ import { Breadcrumb } from '../components/Breadcrumb';
 import { EmptyState } from '../components/EmptyState';
 import { PubgLoader } from '../components/PubgLoader';
 import { getMapName, getMapImage } from '../utils/mapUtils';
+import { SEO } from '../components/SEO';
 
 export function MatchDetailPage() {
     const { slotId, matchId } = useParams();
@@ -81,6 +82,10 @@ export function MatchDetailPage() {
 
     return (
         <div className="animate-fade-in relative">
+            <SEO
+                title={`${mapName} - ${slot.name}`}
+                description={`View match details and player POVs for ${mapName} in ${slot.name}`}
+            />
             <Toaster position="top-right" />
 
             {/* Breadcrumb */}

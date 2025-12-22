@@ -1,6 +1,10 @@
 {
     "rewrites": [
         {
+            "source": "/slots/(.*)",
+            "destination": "/api/slot-meta?path=slots/$1"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }

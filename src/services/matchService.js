@@ -126,7 +126,8 @@ export async function getMatchesBySlot(slotId) {
                         povCount = povsSnapshot.size;
 
                         // Get unique player names
-                        players = povsSnapshot.docs.map(doc => doc.data().playerName);
+                        const allPlayers = povsSnapshot.docs.map(doc => doc.data().playerName);
+                        players = [...new Set(allPlayers)];
                     } catch (error) {
                         console.error('Error counting POVs:', error);
                     }
